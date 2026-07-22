@@ -11,32 +11,35 @@ Security Top 10.
 El diagnóstico inicial (realizado con autorización formal de la institución) detectó que el backend original del portal de Catastro Cochabamba exponía
 públicamente, sin ningún tipo de autenticación ni validación de sesión, los siguientes endpoints:
 
-## **Endpoint	                    Método	      Riesgo detectado**
-  /api/v1/usuarios    	          GET	          Exposición de la base de usuarios (nombres, login, rol)
-  /api/v1/usuariosFuncionarios  	GET	          Exposición de personal municipal
-  /api/v1/predios/{id}	          GET	          Acceso a datos técnicos, legales y geográficos de cualquier predio manipulando el parámetro {id}
+| Endpoint | Método | Riesgo detectado |
+|----------|---------|------------------|
+| `/api/v1/usuarios` | GET | Exposición de la base de usuarios (nombres, login y rol). |
+| `/api/v1/usuariosFuncionarios` | GET | Exposición de información del personal municipal. |
+| `/api/v1/predios/{id}` | GET | Acceso a datos técnicos, legales y geográficos manipulando el parámetro `{id}`. |
 
 Este proyecto replica esa arquitectura en un entorno de prueba aislado para diseñar, implementar y validar una contramedida, sin intervenir 
 en ningún momento sobre el sistema en producción de la institución.
 
-🏗️ Arquitectura
-                  Cliente (Frontend)
-                        │  HTTPS
-                        ▼
-    ┌──────────────────────────────────────────┐
-    │   Middleware de Autenticación (auth.js)  │
-    │   → Verifica firma y expiración del JWT  │
-    └──────────────────────────────────────────┘
-                        │
-                        ▼
-    ┌───────────────────────────────────────────┐
-    │   Capa de Autorización                    │
-    │   → RBAC (rol / tipoUsuario)              │
-    │   → Ownership Binding (usuario_id == id)  │
-    └───────────────────────────────────────────┘
-                        │
-                        ▼
-            Controllers → Pool de conexiones PostgreSQL → Respuesta JSON
+## 🏗️ Arquitectura
+
+```mermaid
+flowchart TD
+
+A[Cliente Frontend]
+B[Middleware JWT<br/>Verificación de firma y expiración]
+C[RBAC<br/>Validación de rol]
+D[Ownership Binding<br/>usuario_id == recurso.usuario_id]
+E[Controllers]
+F[(PostgreSQL)]
+G[JSON Response]
+
+A -->|HTTPS| B
+B --> C
+C --> D
+D --> E
+E --> F
+F --> G
+```
 
 ## Stack técnico:
 
@@ -52,20 +55,37 @@ tipoUsuario	Rol del usuario, usado para el filtrado RBAC de rutas
 exp	Expiración del token, para invalidar sesiones robadas
 
 ## 🚀 Puesta en marcha
-bash
-## 1. Clonar el repositorio
+
+### 1. Clonar el repositorio
+
+```bash
 git clone https://github.com/AleMonCayola/Lab_Backend_Catastro.git
 cd Lab_Backend_Catastro
+```
 
-## 2. Instalar dependencias
+### 2. Instalar dependencias
+
+```bash
 npm install
+```
 
-## 3. Configurar variables de entorno
+### 3. Configurar variables de entorno
+
+```bash
 cp .env.example .env
-# completar: credenciales de PostgreSQL, JWT_SECRET, SEGURIDAD_JWT
+```
 
-## 4. Levantar el servidor
+Completar:
+
+- PostgreSQL
+- JWT_SECRET
+- SEGURIDAD_JWT
+
+### 4. Iniciar el servidor
+
+```bash
 npm start
+```
 
 
 ## 👤 Autor
